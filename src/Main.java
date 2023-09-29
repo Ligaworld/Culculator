@@ -1,103 +1,99 @@
 import java.util.Scanner;
 
-class Calc {
-    public static void main(String[] args) throws Exception {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Введите цифры арабские или римские, (но не смешивааь!!!):");
-        String expression = scanner.nextLine();
-        System.out.println(parse(expression));
+class Calculator {
+    public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
+        Main result = new Main();
+        System.out.println("Input:"); // Запрос ввода
+        String expression = input.nextLine(); // Ввод выражения
+        String answer = result.calc(expression); // Метод calc для объекта result
+
+        System.out.println("Output:\n" + answer); // Выводим ответ
+    }
+}
+
+class Main {
+    public static String calc(String input) {
+        boolean romanOrArab = false; // Для понимания какое число на выходе (рим или араб)
+        String exception = "throws Exception"; // Исключение
+        Main romanExamination = new Main(); // Вводим для проверки и перевода из рим в араб
+        Main arabToRoman = new Main(); // Для перевода ответа в римские
+        int result = 0; // Считает выражение
+        String[] inputSplit = input.split(" ");
+        if (inputSplit.length != 3) {
+            return exception; // Ловим, если не 3 элемента
+        }
+        Integer firstNumber = 0;
+        Integer secondNumber = 0;
+        try {
+            firstNumber = Integer.valueOf(inputSplit[0]);
+            secondNumber = Integer.valueOf(inputSplit[2]);
+        } catch (NumberFormatException e) { // Ловим, если не арабское
+            try {
+                firstNumber = romanExamination.romanToArab(inputSplit[0]);
+                secondNumber = romanExamination.romanToArab(inputSplit[2]);
+                romanOrArab = true;
+            } catch (NumberFormatException ex) { // Ловим, если не римское
+                return exception;
+            }
+        }
+
+        if ((firstNumber < 1) || (firstNumber > 10) || (secondNumber < 1) || (secondNumber > 10)) {
+            return exception; // Указываем диапазон значений 0-10
+        }
+
+        String sign = inputSplit[1];
+        switch (sign) {
+            case "+" -> result = firstNumber + secondNumber;
+            case "-" -> result = firstNumber - secondNumber;
+            case "*" -> result = firstNumber * secondNumber;
+            case "/" -> result = firstNumber / secondNumber;
+            default -> {
+                return exception; // Ловим, если не знак
+            }
+        }
+
+        String output; // Наш вывод
+
+        if (romanOrArab) {
+            if (result < 1) {
+                return exception;
+            } else {
+                output = arabToRoman.arabToRome(result);
+            }
+        } else {
+            output = Integer.toString(result);
+        }
+
+        return output;
     }
 
-    public static String parse(String expresion) throws Exception {
-        int num1;
-        int num2;
-        String oper;
-        String result;
-        boolean isRoman;
-        String[] operands = expresion.split("[+\\-*/]");
-        if (operands.length != 2) throw new Exception("Только два аргумента могут участвовать в операции");
-        oper = detectOperacion(expresion);
-        if (oper == null) throw new Exception("Ты б еще катангенсы ввел)))):");
-        // Если два числа римские (V+X)
-        if (Roman.isRoman (operands[0]) && Roman.isRoman(operands[1])) {
-            //конверт Римских в Арабские
-            num1 = Roman.convertToArabian(operands[0]);
-            num2 = Roman.convertToArabian(operands[1]);
-            isRoman = true;
-        }
-//Оба числа Арабские (1+1)
-        else if (!Roman.isRoman(operands[0]) && !Roman.isRoman(operands[1])) {
-            num1 = Integer.parseInt(operands[0]);
-            num2 = Integer.parseInt(operands[1]);
-            isRoman = false;
-        }
-//если числа разные (1+V)
-        else {
-            throw new Exception("Нужен одинаковый формат (1+1) или (V+I)");
-        }
-        if (num1 > 10 || num2 > 10) {
-            throw new Exception("Калькулятор может только от 1-10))), пока слабоват");
-        }
-        int arabian = calc (num1, num2, oper);
-        if (isRoman) {
-            if (arabian <= 0) {
-                throw new Exception("В Риме нет отрицательных чисел)))");
+    Integer romanToArab(String romanInput) { // Переводим римский ввод в арабский
+        int result = 0;
+        int[] arab = { 10, 9, 5, 4, 1 };
+        String[] roman = { "X", "IX", "V", "IV", "I" };
+        for (int i = 0; i < arab.length; i++) {
+            while (romanInput.indexOf(roman[i]) == 0) {
+                result += arab[i];
+                romanInput = romanInput.substring(roman[i].length()); // Исключаем посчитанные числа
             }
-            //конвертируем полученный результат из арабского опять в Римское число, ох
-            result = Roman.convertToRoman(arabian);
-        } else {
-            //Конвертируем арабское число в тип String
-            result = String.valueOf(arabian);
         }
-        //Возвращаем результат
+
         return result;
     }
 
-    static String detectOperacion (String expression) {
-        if (expression.contains("+")) return "+";
-        else if (expression.contains("-")) return "-";
-        else if (expression.contains("*")) return "*";
-        else if (expression.contains("/")) return "/";
-        else return null;
-    }
-
-    static int calc (int a, int b, String oper) {
-        if (oper.equals("+")) return a + b;
-        else if (oper.equals("-")) return a - b;
-        else if (oper.equals("*")) return a * b;
-        else return a / b;
-    }
-}
-class Roman {
-    static String[] romanArray = new String[]{"0", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI",
-            "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX", "XXI", "XXII", "XXIII", "XXIV",
-            "XXV", "XXVI", "XXVII", "XXVIII", "XXIX", "XXX", "XXXI", "XXXII", "XXXIII", "XXXIV", "XXXV", "XXXVI",
-            "XXXVII", "XXXVIII", "XXXIX", "XL", "XLI", "XLII", "XLIII", "XLIV", "XLV", "XLVI", "XLVII", "XLVIII",
-            "XLIX", "L", "LI", "LII", "LIII", "LIV", "LV", "LVI", "LVII", "LVIII", "LIX", "LX", "LXI", "LXII",
-            "LXIII", "LXIV", "LXV", "LXVI", "LXVII", "LXVIII", "LXIX", "LXX", "LXXI", "LXXII", "LXXIII", "LXXIV",
-            "LXXV", "LXXVI", "LXXVII", "LXXVIII", "LXXIX", "LXXX", "LXXXI", "LXXXII", "LXXXIII", "LXXXIV", "LXXXV",
-            "LXXXVI", "LXXXVII", "LXXXVIII", "LXXXIX", "XC", "XCI", "XCII", "XCIII", "XCIV", "XCV", "XCVI", "XCVII",
-            "XCVIII", "XCIX", "C"};
-
-    public static boolean isRoman(String val) {
-        for (int i = 0; i < romanArray.length; i++) {
-            if (val.equals(romanArray[i])) {
-                return true;
+    String arabToRome(int arabInput) { // Перевод араб в рим
+        String result = "";
+        int value = 0;
+        int[] arab = { 100, 90, 50, 40, 10, 9, 5, 4, 1 };
+        String[] roman = { "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I" };
+        for (int i = 0; i < arab.length; i++) {
+            value = arabInput / arab[i];
+            for (int j = 0; j < value; j++) {
+                result = result.concat(roman[i]);
             }
+            arabInput = arabInput % arab[i];
         }
-        return false;
-    }
-
-    public static int convertToArabian(String roman) {
-        for (int i = 0; i < romanArray.length; i++) {
-            if (roman.equals(romanArray[i])) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    public static String convertToRoman(int arabian) {
-        return romanArray[arabian];
+        return result;
     }
 }
